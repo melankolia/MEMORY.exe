@@ -20,7 +20,7 @@
             <span class="system-text">[SYSTEM32]</span>
           </div>
           <div class="meme-overlay">
-            <span class="stonks">��</span>
+            <span class="stonks">??</span>
             <span class="wow">wow</span>
             <span class="such">such memory</span>
             <span class="very">very cards</span>
