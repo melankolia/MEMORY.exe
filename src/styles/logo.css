@@ -1,0 +1,177 @@
+/* Logo and title styles */
+.logo-container {
+  position: relative;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.game-logo {
+  position: relative;
+  padding: 1rem;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.title-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.title-line {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 0.5rem;
+}
+
+.brain {
+  font-size: clamp(2rem, 4vw, 3rem);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.brain.flip {
+  transform: scaleX(-1);
+}
+
+.memory-text {
+  font-family: 'Courier New', monospace;
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 900;
+  background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+  letter-spacing: -2px;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
+}
+
+.subtitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Courier New', monospace;
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  position: relative;
+}
+
+.loading-text {
+  color: #7e22ce;
+  font-weight: bold;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 2px;
+}
+
+.dot {
+  animation: loadingDots 1.5s infinite;
+  color: #7e22ce;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.system-text {
+  display: none;
+  font-size: 0.7em;
+}
+
+@media (min-width: 640px) {
+  .system-text {
+    display: inline;
+  }
+}
+
+@keyframes loadingDots {
+  0%, 100% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* ... rest of logo styles ... */
+
+.meme-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.wow, .such, .very {
+  position: absolute;
+  font-family: 'Comic Sans MS', cursive;
+  color: #9333ea;
+  font-size: 1.2rem;
+  opacity: 0;
+  animation: appear 5s ease-in-out infinite;
+}
+
+.wow {
+  top: 0;
+  left: -50px;
+  animation-delay: 0s;
+  transform: rotate(-15deg);
+}
+
+.such {
+  bottom: -20px;
+  left: 20%;
+  animation-delay: 1s;
+  transform: rotate(10deg);
+}
+
+.very {
+  top: 20px;
+  right: -60px;
+  animation-delay: 2s;
+  transform: rotate(15deg);
+}
+
+.stonks {
+  position: absolute;
+  top: -20px;
+  right: -30px;
+  font-size: 2.5rem;
+  transform: rotate(30deg);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes appear {
+  0%, 100% { 
+    opacity: 0; 
+    transform: translateY(10px) rotate(var(--rotation, 0deg));
+  }
+  10%, 90% { 
+    opacity: 0; 
+  }
+  50% { 
+    opacity: 1; 
+    transform: translateY(0) rotate(var(--rotation, 0deg));
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: rotate(30deg) translateY(0); }
+  50% { transform: rotate(30deg) translateY(-10px); }
+} 
