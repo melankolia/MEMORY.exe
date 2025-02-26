@@ -85,12 +85,13 @@
     <Snackbar
       v-model:show="showSnackbar"
       :message="snackbarMessage"
+      :duration="5000"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useGameStore } from '@/stores/gameStore';
 import MusicPlayer from '@/components/MusicPlayer.vue';
 import MemoryCard from '@/components/MemoryCard.vue';
@@ -164,13 +165,24 @@ watch(() => store.lastApiResponse, (response) => {
     if (response.error) {
       message = response.error;
     } else {
-      // Format the response nicely
-      message = `Counter: ${response.counter || 0}`;
+      const wallets = [
+        '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
+        '0x123f681646d4a755815f9cb19e1acc8565a0c2ac',
+        '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        '0x7a250d5630b4cf539739df2c5dacb4c659f2488d'
+      ];
+      const randomWallet = wallets[Math.floor(Math.random() * wallets.length)];
+      message = `Tx: ${randomWallet}`;
     }
-    snackbarMessage.value = message;
-    showSnackbar.value = true;
+    // First set show to false to reset the watcher
+    showSnackbar.value = false;
+    // Use nextTick to ensure the show transition triggers
+    nextTick(() => {
+      snackbarMessage.value = message;
+      showSnackbar.value = true;
+    });
   }
-});
+}, { immediate: true });
 
 // Clean up timer on unmount
 onUnmounted(() => {
