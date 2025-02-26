@@ -81,15 +81,21 @@
         </div>
       </div>
     </div>
+
+    <Snackbar
+      v-model:show="showSnackbar"
+      :message="snackbarMessage"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useGameStore } from '@/stores/gameStore';
 import MusicPlayer from '@/components/MusicPlayer.vue';
 import MemoryCard from '@/components/MemoryCard.vue';
 import { useGameSounds } from '@/composables/useGameSounds';
+import Snackbar from '@/components/Snackbar.vue';
 
 const store = useGameStore();
 const { 
@@ -101,6 +107,8 @@ const {
 } = useGameSounds();
 const timerInterval = ref(null);
 const isFirstClick = ref(true);
+const showSnackbar = ref(false);
+const snackbarMessage = ref('');
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -148,6 +156,21 @@ const startGame = () => {
 const restartGame = () => {
   startGame();
 };
+
+// Watch for API responses
+watch(() => store.lastApiResponse, (response) => {
+  if (response) {
+    let message = '';
+    if (response.error) {
+      message = response.error;
+    } else {
+      // Format the response nicely
+      message = `Counter: ${response.counter || 0}`;
+    }
+    snackbarMessage.value = message;
+    showSnackbar.value = true;
+  }
+});
 
 // Clean up timer on unmount
 onUnmounted(() => {

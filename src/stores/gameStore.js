@@ -1,4 +1,17 @@
 import { defineStore } from 'pinia';
+import axios from 'axios';
+
+const API_URL = 'https://creative-inspiration-production.up.railway.app';
+
+const callMatchAPI = async () => {
+  try {
+    const response = await axios.post(`${API_URL}/counter`);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to call match API:', error);
+    throw error;
+  }
+};
 
 export const useGameStore = defineStore('game', {
   state: () => ({
@@ -8,11 +21,16 @@ export const useGameStore = defineStore('game', {
     isPlaying: false,
     cards: [],
     flippedCards: [],
+    gameScore: 0,
+    lastApiResponse: null,
   }),
 
   getters: {
     isGameComplete: (state) => state.cards.every(card => card.matched),
-    finalScore: (state) => state.currentScore + Math.max(0, 1000 - state.timeElapsed * 10),
+    finalScore: (state) => {
+      const timePenalty = Math.max(0, 1000 - state.timeElapsed * 10);
+      return Math.max(0, state.gameScore + timePenalty);
+    },
   },
 
   actions: {
@@ -24,30 +42,37 @@ export const useGameStore = defineStore('game', {
       
       this.cards = shuffled;
       this.currentScore = 0;
+      this.gameScore = 0;
       this.timeElapsed = 0;
       this.flippedCards = [];
       this.isPlaying = false;
     },
 
-    updateBestScore() {
-      if (this.finalScore > this.bestScore) {
-        this.bestScore = this.finalScore;
-      }
-    },
-
-    flipCard(index) {
+    async flipCard(index) {
       if (this.cards[index].flipped || this.flippedCards.length === 2) return false;
       
       if (!this.isPlaying) {
         this.isPlaying = true;
       }
       
+      // Flip card immediately
       this.cards[index].flipped = true;
       this.flippedCards.push(index);
+
+      // Make API call in the background
+      callMatchAPI()
+        .then(response => {
+          this.lastApiResponse = response;
+        })
+        .catch(error => {
+          console.error('API call failed:', error);
+          this.lastApiResponse = { error: 'Failed to connect to server' };
+        });
+
       return true;
     },
 
-    checkMatch() {
+    async checkMatch() {
       const [first, second] = this.flippedCards;
       const isMatch = this.cards[first].value === this.cards[second].value;
 
@@ -55,15 +80,20 @@ export const useGameStore = defineStore('game', {
         this.cards[first].matched = true;
         this.cards[second].matched = true;
         this.currentScore += 100;
+        this.gameScore += 100;
         
         if (this.isGameComplete) {
           this.isPlaying = false;
-          this.updateBestScore();
+          const finalScore = this.finalScore;
+          if (finalScore > this.bestScore) {
+            this.bestScore = finalScore;
+          }
         }
       } else {
         this.cards[first].flipped = false;
         this.cards[second].flipped = false;
         this.currentScore = Math.max(0, this.currentScore - 20);
+        this.gameScore = Math.max(0, this.gameScore - 20);
       }
       
       this.flippedCards = [];
