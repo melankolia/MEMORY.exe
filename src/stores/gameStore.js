@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import axios from 'axios';
 
 const API_URL = 'https://creative-inspiration-production.up.railway.app';
+let apiTimeout = null;
 
 const callMatchAPI = async () => {
   try {
@@ -11,6 +12,22 @@ const callMatchAPI = async () => {
     console.error('Failed to call match API:', error);
     throw error;
   }
+};
+
+const debouncedCallAPI = (callback) => {
+  if (apiTimeout) {
+    clearTimeout(apiTimeout);
+  }
+  
+  apiTimeout = setTimeout(async () => {
+    try {
+      const response = await callMatchAPI();
+      callback(response);
+    } catch (error) {
+      callback({ error: 'Failed to connect to server' });
+    }
+    apiTimeout = null;
+  }, 1000); // 500ms debounce
 };
 
 export const useGameStore = defineStore('game', {
@@ -59,15 +76,10 @@ export const useGameStore = defineStore('game', {
       this.cards[index].flipped = true;
       this.flippedCards.push(index);
 
-      // Make API call in the background
-      callMatchAPI()
-        .then(response => {
-          this.lastApiResponse = response;
-        })
-        .catch(error => {
-          console.error('API call failed:', error);
-          this.lastApiResponse = { error: 'Failed to connect to server' };
-        });
+      // Debounced API call
+      debouncedCallAPI((response) => {
+        this.lastApiResponse = response;
+      });
 
       return true;
     },
