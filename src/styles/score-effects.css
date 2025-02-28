@@ -1,0 +1,38 @@
+.score-popup {
+  position: fixed;
+  pointer-events: none;
+  font-weight: bold;
+  font-size: 1.5rem;
+  font-family: 'Courier New', monospace;
+  z-index: 100;
+  animation: score-float 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  text-shadow: 0 0 4px currentColor;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.1));
+}
+
+.score-popup.match {
+  color: #10B981;
+  font-size: 2rem;
+  text-shadow: 0 0 3px rgba(16, 185, 129, 0.6);
+}
+
+.score-popup.mismatch {
+  color: #EF4444;
+  font-size: 1.75rem;
+  text-shadow: 0 0 3px rgba(239, 68, 68, 0.6);
+}
+
+@keyframes score-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -80%) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -120%) scale(1);
+  }
+} 

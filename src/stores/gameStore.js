@@ -25,7 +25,10 @@ const debouncedCallAPI = (store, callback) => {
 
   apiTimeout = setTimeout(async () => {
     try {
-      const response = await updateScoreOnChain(store.secureId, store.currentScore);
+      const response = await updateScoreOnChain(
+        store.secureId,
+        store.currentScore
+      );
       if (response.error) {
         callback({ error: response.error });
       } else {
@@ -79,9 +82,10 @@ export const useGameStore = defineStore("game", {
     },
 
     calculateFinalScore() {
-      const timeBonus = Math.max(0, 1000 - this.timeElapsed * 10);
-      this.finalGameScore = this.gameScore + timeBonus;
-      
+      const timeBonus = Math.max(0, 1000 - this.timeElapsed * 2);
+      const completionBonus = 500;
+      this.finalGameScore = this.gameScore + timeBonus + completionBonus;
+
       if (this.finalGameScore > this.bestScore) {
         this.bestScore = this.finalGameScore;
       }
@@ -133,13 +137,13 @@ export const useGameStore = defineStore("game", {
       if (isMatch) {
         this.cards[first].matched = true;
         this.cards[second].matched = true;
-        this.currentScore += 100;
-        this.gameScore += 100;
+        this.currentScore += 150;
+        this.gameScore += 150;
       } else {
         this.cards[first].flipped = false;
         this.cards[second].flipped = false;
-        this.currentScore = Math.max(0, this.currentScore - 20);
-        this.gameScore = Math.max(0, this.gameScore - 20);
+        this.currentScore = Math.max(0, this.currentScore - 10);
+        this.gameScore = Math.max(0, this.gameScore - 10);
       }
 
       this.updateScore();
@@ -209,7 +213,8 @@ export const useGameStore = defineStore("game", {
         this.isPlaying = false;
 
         this.lastApiResponse = {
-          transactionHash: claimResponse.data.transactionHash || claimResponse.data.hash,
+          transactionHash:
+            claimResponse.data.transactionHash || claimResponse.data.hash,
           message: "Score claimed successfully!",
         };
 

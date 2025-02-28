@@ -58,6 +58,24 @@
 
       <!-- Game container -->
       <div class="relative">
+        <!-- Add TransitionGroup here, before the grid -->
+        <TransitionGroup name="fade" class="pointer-events-none">
+          <div
+            v-for="popup in scorePopups"
+            :key="popup.id"
+            class="score-popup fixed text-2xl font-bold"
+            :class="popup.type"
+            :style="{
+              left: `${popup.x}px`,
+              top: `${popup.y}px`,
+              transform: 'translate(-50%, -50%)',
+              zIndex: 50,
+            }"
+          >
+            {{ popup.text }}
+          </div>
+        </TransitionGroup>
+
         <div
           class="grid grid-cols-4 gap-4 p-4 bg-purple-900/20 rounded-xl backdrop-blur-sm"
         >
@@ -67,6 +85,8 @@
             :value="card.value"
             :flipped="card.flipped"
             :matched="card.matched"
+            :show-effect="cardEffects[index]"
+            :index="index"
             @flip="flipCard(index)"
           />
 
@@ -166,6 +186,8 @@
   const leaderboardScores = ref([]);
   const isSaving = ref(false);
   const scoreSaved = ref(false);
+  const cardEffects = ref(Array(16).fill(""));
+  const scorePopups = ref([]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -191,14 +213,82 @@
       }
 
       if (store.flippedCards.length === 2) {
+        const [first, second] = store.flippedCards;
+
         setTimeout(() => {
           const isMatch = store.checkMatch();
           if (isMatch) {
+            cardEffects.value[first] = "match";
+            cardEffects.value[second] = "match";
             playMatchSound();
+
+            // Add score popup for match
+            const firstCard = document.querySelector(
+              `[data-card-index="${first}"]`
+            );
+            const secondCard = document.querySelector(
+              `[data-card-index="${second}"]`
+            );
+
+            if (firstCard && secondCard) {
+              const rect1 = firstCard.getBoundingClientRect();
+              const rect2 = secondCard.getBoundingClientRect();
+
+              // Calculate center position between the two cards
+              const centerX = (rect1.left + rect2.left) / 2 + rect1.width / 2;
+              const centerY = (rect1.top + rect2.top) / 2;
+
+              scorePopups.value.push({
+                id: Date.now(),
+                x: centerX,
+                y: centerY,
+                text: "+150",
+                type: "match",
+              });
+            }
           } else {
+            cardEffects.value[first] = "mismatch";
+            cardEffects.value[second] = "mismatch";
             playFailSound();
+
+            // Add score popup for mismatch
+            const firstCard = document.querySelector(
+              `[data-card-index="${first}"]`
+            );
+            const secondCard = document.querySelector(
+              `[data-card-index="${second}"]`
+            );
+
+            if (firstCard && secondCard) {
+              const rect1 = firstCard.getBoundingClientRect();
+              const rect2 = secondCard.getBoundingClientRect();
+
+              const centerX = (rect1.left + rect2.left) / 2 + rect1.width / 2;
+              const centerY = (rect1.top + rect2.top) / 2;
+
+              scorePopups.value.push({
+                id: Date.now(),
+                x: centerX,
+                y: centerY,
+                text: "-10",
+                type: "mismatch",
+              });
+            }
           }
-        }, 1000);
+
+          // Clean up old popups
+          setTimeout(() => {
+            scorePopups.value = scorePopups.value.filter(
+              (popup) => Date.now() - popup.id < 1000
+            );
+          }, 1000);
+
+          // Reset effects
+          setTimeout(() => {
+            cardEffects.value[first] = "";
+            cardEffects.value[second] = "";
+          }, 800);
+        }, 600);
       }
     }
   };
@@ -327,4 +417,5 @@
   @import "../styles/logo.css";
   @import "../styles/restart-button.css";
   @import "../styles/music-player.css";
+  @import "../styles/score-effects.css";
 </style>
