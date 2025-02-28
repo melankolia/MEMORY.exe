@@ -5,7 +5,7 @@ import { API_URL } from "@/constants";
 
 let apiTimeout = null;
 
-const updateScore = async (secureId, score) => {
+const updateScoreOnChain = async (secureId, score) => {
   try {
     const response = await axios.post(`${API_URL}/score`, {
       secureId,
@@ -25,7 +25,7 @@ const debouncedCallAPI = (store, callback) => {
 
   apiTimeout = setTimeout(async () => {
     try {
-      const response = await updateScore(store.secureId, store.currentScore);
+      const response = await updateScoreOnChain(store.secureId, store.currentScore);
       if (response.error) {
         callback({ error: response.error });
       } else {
@@ -53,15 +53,13 @@ export const useGameStore = defineStore("game", {
       lastApiResponse: null,
       secureId,
       walletAddress: null,
+      finalGameScore: 0,
     };
   },
 
   getters: {
     isGameComplete: (state) => state.cards.every((card) => card.matched),
-    finalScore: (state) => {
-      const timePenalty = Math.max(0, 1000 - state.timeElapsed * 10);
-      return Math.max(0, state.gameScore + timePenalty);
-    },
+    finalScore: (state) => state.finalGameScore,
   },
 
   actions: {
@@ -77,16 +75,24 @@ export const useGameStore = defineStore("game", {
       this.timeElapsed = 0;
       this.flippedCards = [];
       this.isPlaying = false;
+      this.finalGameScore = 0;
+    },
+
+    calculateFinalScore() {
+      const timeBonus = Math.max(0, 1000 - this.timeElapsed * 10);
+      this.finalGameScore = this.gameScore + timeBonus;
+      
+      if (this.finalGameScore > this.bestScore) {
+        this.bestScore = this.finalGameScore;
+      }
     },
 
     async flipCard(index) {
-      // Validate index
       if (index < 0 || index >= this.cards.length) {
         console.error("Invalid card index:", index);
         return false;
       }
 
-      // Check if card can be flipped
       if (
         this.cards[index].flipped ||
         this.cards[index].matched ||
@@ -95,16 +101,13 @@ export const useGameStore = defineStore("game", {
         return false;
       }
 
-      // Start game on first flip
       if (!this.isPlaying) {
         this.isPlaying = true;
       }
 
-      // Flip card
       this.cards[index].flipped = true;
       this.flippedCards.push(index);
 
-      // Update score via API
       debouncedCallAPI(this, (response) => {
         this.lastApiResponse = response;
       });
@@ -113,14 +116,12 @@ export const useGameStore = defineStore("game", {
     },
 
     checkMatch() {
-      // Guard against invalid flipped cards state
       if (this.flippedCards.length !== 2) {
         return false;
       }
 
       const [first, second] = this.flippedCards;
 
-      // Validate card indices
       if (!this.cards[first] || !this.cards[second]) {
         console.error("Invalid card indices:", first, second);
         this.flippedCards = [];
@@ -141,15 +142,19 @@ export const useGameStore = defineStore("game", {
         this.gameScore = Math.max(0, this.gameScore - 20);
       }
 
-      // Update local score state
       this.updateScore();
 
-      // Debounce the API call
       debouncedCallAPI(this, (response) => {
         this.lastApiResponse = response;
       });
 
       this.flippedCards = [];
+
+      if (this.isGameComplete) {
+        this.isPlaying = false;
+        this.calculateFinalScore();
+      }
+
       return isMatch;
     },
 
@@ -170,10 +175,7 @@ export const useGameStore = defineStore("game", {
     updateScore() {
       if (this.isGameComplete) {
         this.isPlaying = false;
-        const finalScore = this.finalScore;
-        if (finalScore > this.bestScore) {
-          this.bestScore = finalScore;
-        }
+        this.calculateFinalScore();
       }
     },
 
@@ -185,18 +187,33 @@ export const useGameStore = defineStore("game", {
       }
 
       try {
-        const response = await axios.post(`${API_URL}/claim-score`, {
+        const scoreResponse = await axios.post(`${API_URL}/score`, {
+          secureId: this.secureId,
+          score: this.finalGameScore,
+        });
+
+        if (scoreResponse.error) {
+          throw new Error(scoreResponse.error);
+        }
+
+        const claimResponse = await axios.post(`${API_URL}/claim-score`, {
           secureId: this.secureId,
           player: this.walletAddress,
         });
 
-        // Update last API response for the snackbar
+        this.secureId = uuidv4();
+
+        this.currentScore = 0;
+        this.gameScore = 0;
+        this.timeElapsed = 0;
+        this.isPlaying = false;
+
         this.lastApiResponse = {
-          transactionHash: response.data.transactionHash || response.data.hash,
+          transactionHash: claimResponse.data.transactionHash || claimResponse.data.hash,
           message: "Score claimed successfully!",
         };
 
-        return response.data;
+        return claimResponse.data;
       } catch (error) {
         console.error("Failed to save score:", error);
         throw new Error(
