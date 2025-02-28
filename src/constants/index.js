@@ -1,1 +1,2 @@
-export const API_URL = "http://localhost:5173";
+export const API_URL =
+  "https://creative-inspiration-production.up.railway.app/";
