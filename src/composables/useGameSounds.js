@@ -1,50 +1,32 @@
 export const useGameSounds = () => {
-  const flipSound = new Audio('/sounds/flip.mp3');
-  const matchSound = new Audio('/sounds/match.mp3');
-  const failSound = new Audio('/sounds/fail.mp3');
-  const restartSound = new Audio('/sounds/restart.mp3');
-  const firstClickSound = new Audio('/sounds/start.mp3');
-
-  const playSound = (sound) => {
-    sound.currentTime = 0;
-    sound.play().catch(() => {});
+  const sounds = {
+    flip: new Audio("/sounds/flip.mp3"),
+    match: new Audio("/sounds/match.mp3"),
+    fail: new Audio("/sounds/fail.mp3"),
+    restart: new Audio("/sounds/restart.mp3"),
+    firstClick: new Audio("/sounds/start.mp3"),
   };
 
-  const playFlipSound = () => {
-    const audio = new Audio('/sounds/flip.mp3');
-    audio.volume = 0.3;
-    audio.play();
-  };
+  // Initialize volumes
+  sounds.flip.volume = 0.3;
+  sounds.match.volume = 0.3;
+  sounds.fail.volume = 0.2;
+  sounds.restart.volume = 0.4;
+  sounds.firstClick.volume = 0.4;
 
-  const playMatchSound = () => {
-    const audio = new Audio('/sounds/match.mp3');
-    audio.volume = 0.3;
-    audio.play();
-  };
-
-  const playFailSound = () => {
-    const audio = new Audio('/sounds/fail.mp3');
-    audio.volume = 0.2;
-    audio.play();
-  };
-
-  const playRestartSound = () => {
-    const audio = new Audio('/sounds/restart.mp3');
-    audio.volume = 0.4;
-    audio.play();
-  };
-
-  const playFirstClickSound = () => {
-    const audio = new Audio('/sounds/start.mp3');
-    audio.volume = 0.4;
-    audio.play();
+  const playSound = (soundName) => {
+    const sound = sounds[soundName];
+    if (sound) {
+      sound.currentTime = 0;
+      sound.play().catch(() => {});
+    }
   };
 
   return {
-    playFlipSound,
-    playMatchSound,
-    playFailSound,
-    playRestartSound,
-    playFirstClickSound
+    playFlipSound: () => playSound("flip"),
+    playMatchSound: () => playSound("match"),
+    playFailSound: () => playSound("fail"),
+    playRestartSound: () => playSound("restart"),
+    playFirstClickSound: () => playSound("firstClick"),
   };
-}; 
+};

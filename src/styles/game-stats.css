@@ -1,8 +1,8 @@
 /* Game stats styles */
 .game-stats-panel {
   position: absolute;
-  right: -150px;
-  top: 25%;
+  right: -170px;
+  top: 30%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
@@ -25,10 +25,16 @@
   background: rgba(147, 51, 234, 0.05);
   min-width: 80px;
   transition: all 0.3s ease;
+  cursor: default;
 }
 
 .stat-box:hover {
   background: rgba(147, 51, 234, 0.1);
+}
+
+.stat-box.hover\:bg-purple-100:hover {
+  background: rgba(147, 51, 234, 0.1);
+  transform: translateY(-1px);
 }
 
 .stat-label {
